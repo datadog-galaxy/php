@@ -1,0 +1,55 @@
+---
+- name: PHP | ADD REPO
+  apt_repository: repo='ppa:ondrej/php'
+  become: yes
+
+- name: PHP | INSTALL PACKAGES
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+  become: yes
+  with_items:
+    - "php{{ php_version }}-fpm"
+    - "php{{ php_version }}-gd"
+    - "php{{ php_version }}-mbstring"
+    - "php{{ php_version }}-curl"
+    - "php{{ php_version }}-mysql"
+    - "php{{ php_version }}-xml"
+    - "php{{ php_version }}-zip"
+    - "php{{ php_version }}-intl"
+    - "php{{ php_version }}-cli"
+    - "php{{ php_version }}-common"
+    - "php{{ php_version }}-json"
+    - "php{{ php_version }}-opcache"
+    - "php{{ php_version }}-readline"
+    - "php-memcached"
+    - "php-redis"
+  notify: restart php-fpm
+
+- name: PHP | CONFIGURE
+  lineinfile:
+    dest: "/etc/php/{{ php_version }}/fpm/pool.d/www.conf"
+    regexp: "{{ item.key }}"
+    line: "{{ item.value }}"
+  become: yes
+  notify: restart php-fpm
+  tags: config
+  with_dict: "{{ fpm_config }}"
+
+- name: PHP | UPDATE PHP.INI
+  lineinfile:
+    dest: "/etc/php/{{ php_version }}/fpm/php.ini"
+    regexp: "^;?{{ item.key }} *=.*$"
+    line: "{{ item.key }}={{ item.value }}"
+  become: yes
+  notify: restart php-fpm
+  tags: config
+  with_dict: "{{ params }}"
+
+- name: PHP | ENABLE FPM
+  service:
+    name: "php{{ php_version }}-fpm"
+    state: started
+    enabled: yes
+  become: yes
+

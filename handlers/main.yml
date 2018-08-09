@@ -1,0 +1,14 @@
+---
+- name: restart php-fpm
+  service:
+    name: php-fpm
+    state: restarted
+  ignore_errors: yes
+  when: ansible_distribution == 'CentOS'
+
+- name: reload php-fpm
+  service:
+    name: php-fpm
+    state: reloaded
+  ignore_errors: yes
+  when: ansible_distribution == 'CentOS'
